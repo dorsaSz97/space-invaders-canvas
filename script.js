@@ -83,11 +83,11 @@ const spaceship = new Spaceship();
 class Projectile {
   // anything dynamic should be passed as a parameter
   constructor({ x, y }) {
-    this.width = 2;
+    this.width = 5;
     this.height = 13;
 
     this.coordinates = {
-      x: x,
+      x: x - this.width / 2,
       y: y,
     };
 
@@ -95,13 +95,17 @@ class Projectile {
       x: 0,
       y: -13,
     };
-
-    this.radius = 3;
   }
 
   draw() {
+    c.shadowBlur = 13;
+    c.shadowOffsetY = 20;
+    c.shadowColor = 'white';
     c.fillStyle = 'white';
     c.fillRect(this.coordinates.x, this.coordinates.y, this.width, this.height);
+    // clearing the shadow
+    c.shadowColor = 'transparent';
+    c.shadowBlur = 0;
   }
 
   update() {
@@ -126,7 +130,7 @@ function createProjectiles() {
 // --------------------------------------
 // ------ALIEN------
 class Alien {
-  constructor() {
+  constructor(x, y) {
     this.velocity = {
       x: 0,
       y: 0,
@@ -137,14 +141,14 @@ class Alien {
 
     image.addEventListener('load', () => {
       this.image = image;
-      const scale = 1.2;
+      const scale = 1;
 
       this.width = image.width / scale;
       this.height = image.height / scale;
 
       this.coordinates = {
-        x: canvas.width / 2 - this.width / 2,
-        y: canvas.height / 2 - this.height / 2,
+        x: x * this.width,
+        y: y * this.height,
       };
     });
   }
@@ -159,15 +163,64 @@ class Alien {
     );
   }
 
-  update() {
+  update(dx, dy) {
     if (this.image) {
       this.draw();
-      this.coordinates.x += this.velocity.x;
-      this.coordinates.y += this.velocity.y;
+      this.coordinates.x += dx;
+      this.coordinates.y += dy;
     }
   }
 }
-const alien = new Alien();
+
+// --------------------------------------
+// ------GROUP------
+class Group {
+  constructor() {
+    this.coordinates = {
+      x: 0,
+      y: 0,
+    };
+    this.velocity = {
+      x: 7,
+      y: 0,
+    };
+
+    // this group is gonna contain an array of aliens
+    this.members = [];
+
+    // minimum 3 cols and 2 rows
+    // maximum 9 cols and 7 rows
+    const cols = Math.floor(Math.random() * (9 - 3) + 3);
+    const rows = Math.floor(Math.random() * (7 - 2) + 2);
+
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        this.members.push(new Alien(c, r));
+      }
+    }
+    this.width = 64 * cols;
+    this.height = 64 * rows;
+  }
+
+  update() {
+    // this alone moves the group but not the aliens inside. they should have the same velocity
+    this.coordinates.x += this.velocity.x;
+    this.coordinates.y += this.velocity.y;
+
+    // bounce back the group when it hits the sides of the window
+    if (
+      this.coordinates.x + this.width >= canvas.width ||
+      this.coordinates.x <= 0
+    ) {
+      this.velocity.x = -this.velocity.x;
+      this.velocity.y = 64 / 2.5;
+    } else {
+      this.velocity.y = 0;
+    }
+  }
+}
+// multiple groups coming and going
+const groups = [new Group()];
 
 // --------------------------------------
 // creating this to check if we wanted to add to the position or not
@@ -206,7 +259,12 @@ function animate() {
       projectile.update();
     }
   });
-  alien.update();
+  groups.forEach(group => {
+    group.update();
+    group.members.forEach(member => {
+      member.update(group.velocity.x, group.velocity.y);
+    });
+  });
 
   if (controlKeys.a.pressed && spaceship.coordinates.x >= 0) {
     spaceship.velocity.x = -5;
@@ -237,7 +295,6 @@ addEventListener('keydown', e => {
       controlKeys.d.pressed = true;
       break;
     case ' ':
-      console.log(e);
       controlKeys.space.pressed = true;
       break;
     default:
