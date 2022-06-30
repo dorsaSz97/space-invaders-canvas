@@ -13,6 +13,8 @@ class Spaceship {
       y: 0,
     };
 
+    this.tilt = 0;
+
     // image for the visuals of the spaceship
     // drawImage() needs an image element with its src set
     const image = new Image();
@@ -37,6 +39,21 @@ class Spaceship {
   // drawing spaceship element in the canvas (its a method so it can be called either from the outside or from the inside)
   draw() {
     // c.fillRect(this.coordinates.x, this.coordinates.y, this.width, this.height); // TEST
+
+    // taking a snapshot of the current state of the canvas
+    c.save();
+    // first we have to move the top left of our canvas to the middle of our spaceship
+    c.translate(
+      spaceship.coordinates.x + spaceship.width / 2,
+      spaceship.coordinates.y + spaceship.height / 2
+    );
+    c.rotate(this.tilt);
+    // putting the canvas back where it was from where it is atm
+    c.translate(
+      -spaceship.coordinates.x - spaceship.width / 2,
+      -spaceship.coordinates.y - spaceship.height / 2
+    );
+
     c.drawImage(
       this.image,
       this.coordinates.x,
@@ -44,6 +61,9 @@ class Spaceship {
       this.width,
       this.height
     );
+
+    // restoring that saved snapshot
+    c.restore();
   }
 
   // changing the coordinates based on the velocity. we want a new method so we can call it when we click or move the mouse, separate from the draw(), which is firing off continuously
@@ -51,11 +71,6 @@ class Spaceship {
     // after the image loaded
     if (this.image) {
       this.draw();
-
-      // spaceship's movement W/mouse
-      addEventListener('mousemove', ({ x }) => {
-        spaceship.coordinates.x = x - spaceship.width / 2;
-      });
       this.coordinates.x += this.velocity.x;
     }
   }
@@ -84,12 +99,18 @@ function animate() {
   c.fillRect(0, 0, canvas.width, canvas.height);
   spaceship.update();
 
-  if (controlKeys.a.pressed) {
+  if (controlKeys.a.pressed && spaceship.coordinates.x >= 0) {
     spaceship.velocity.x = -5;
-  } else if (controlKeys.d.pressed) {
+    spaceship.tilt = -0.2;
+  } else if (
+    controlKeys.d.pressed &&
+    spaceship.coordinates.x <= canvas.width - spaceship.width
+  ) {
     spaceship.velocity.x = 5;
+    spaceship.tilt = 0.2;
   } else {
     spaceship.velocity.x = 0;
+    spaceship.tilt = 0;
   }
 }
 animate();
@@ -111,7 +132,6 @@ addEventListener('keydown', e => {
       break;
   }
 });
-
 addEventListener('keyup', e => {
   switch (e.key) {
     case 'a':
@@ -127,23 +147,3 @@ addEventListener('keyup', e => {
       break;
   }
 });
-
-// let shootmessage;
-// function shoot() {
-//   shootmessage = setInterval(() => {
-//     console.log('shoot');
-//   }, 60 / 1000);
-// }
-// let isdown = false;
-// addEventListener('mousedown', e => {
-//   console.log(e);
-//   isdown = true;
-//   if (isdown) {
-//     shoot();
-//   }
-// });
-// addEventListener('mouseup', e => {
-//   console.log(e);
-//   isdown = false;
-//   if (shootmessage) clearInterval(shootmessage);
-// });
