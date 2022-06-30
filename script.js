@@ -261,11 +261,12 @@ function animate() {
       projectile.update();
     }
   });
-  groups.forEach(group => {
+  groups.forEach((group, gi) => {
     group.update();
     group.members.forEach((member, mi) => {
       member.update(group.velocity.x, group.velocity.y);
 
+      // collision detection
       projectiles.forEach((projectile, pi) => {
         if (
           projectile.coordinates.y <= member.coordinates.y + member.height &&
@@ -275,15 +276,28 @@ function animate() {
         ) {
           setTimeout(() => {
             // ?? what does it mean 'splicing changes the whole array so we need to make sure the items we wanna remove are actually there in the first place' ??
-            // if (
-            //   group.members.find(m => m === member) &&
-            //   projectiles.find(p => p === projectile)
-            // ) {
-            //   projectiles.splice(pi, 1);
-            //   group.members.splice(mi, 1);
-            // }
-            projectiles.splice(pi, 1);
-            group.members.splice(mi, 1);
+            if (
+              group.members.find(m => m === member) &&
+              projectiles.find(p => p === projectile)
+            ) {
+              // remove both projectile and alien from the array
+              projectiles.splice(pi, 1);
+              group.members.splice(mi, 1);
+
+              // whatever we do, the first alien in the array is located in the far left and the last one in the array is in the right
+              // if we have anything!
+              if (group.members.length > 0) {
+                // this is taking care of the width and not where the group actually starts
+                group.width =
+                  group.members[group.members.length - 1].coordinates.x +
+                  group.members[group.members.length - 1].width -
+                  group.members[0].coordinates.x;
+                group.coordinates.x = group.members[0].coordinates.x;
+              } else {
+                // garbage collection: deleting the entire group with all its aliens removed
+                groups.splice(gi, 1);
+              }
+            }
           }, 0);
         }
       });
