@@ -141,7 +141,7 @@ class Alien {
 
     image.addEventListener('load', () => {
       this.image = image;
-      const scale = 1;
+      const scale = 1.4;
 
       this.width = image.width / scale;
       this.height = image.height / scale;
@@ -181,7 +181,7 @@ class Group {
       y: 0,
     };
     this.velocity = {
-      x: 7,
+      x: 8,
       y: 0,
     };
 
@@ -191,15 +191,15 @@ class Group {
     // minimum 3 cols and 2 rows
     // maximum 9 cols and 7 rows
     const cols = Math.floor(Math.random() * (9 - 3) + 3);
-    const rows = Math.floor(Math.random() * (7 - 2) + 2);
+    const rows = Math.floor(canvas.height / 5 / (64 / 1.4));
 
     for (let c = 0; c < cols; c++) {
       for (let r = 0; r < rows; r++) {
         this.members.push(new Alien(c, r));
       }
     }
-    this.width = 64 * cols;
-    this.height = 64 * rows;
+    this.width = (64 / 1.4) * cols;
+    this.height = (64 / 1.4) * rows;
   }
 
   update() {
@@ -213,7 +213,7 @@ class Group {
       this.coordinates.x <= 0
     ) {
       this.velocity.x = -this.velocity.x;
-      this.velocity.y = 64 / 2.5;
+      this.velocity.y = 64 / 1.4 / 2.5;
     } else {
       this.velocity.y = 0;
     }
@@ -239,6 +239,8 @@ const controlKeys = {
 // --------------------------------------
 // ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
+let framesNumb = 0;
+let randomFraction = Math.floor(Math.random() * 630 + 630);
 function animate() {
   requestAnimationFrame(animate);
 
@@ -279,6 +281,17 @@ function animate() {
     spaceship.velocity.x = 0;
     spaceship.tilt = 0;
   }
+
+  // creating a new group of aliens after a number of frames has been painted and the previoud group is somewhat in the middle
+  framesNumb++;
+  groups.forEach(group => {
+    if (framesNumb % randomFraction === 0) {
+      // ?? stop creating a lot unwanted of groups
+      // framesNumb =0;
+      randomFraction = Math.floor(Math.random() * 630 + 630);
+      groups.push(new Group());
+    }
+  });
 }
 animate();
 
