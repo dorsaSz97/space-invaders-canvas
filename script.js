@@ -127,6 +127,44 @@ function createProjectiles() {
   }
 }
 
+// // --------------------------------------
+// // ------PROJECTILE------
+// class AlienProjectile {
+//   // anything dynamic should be passed as a parameter
+//   constructor({ x, y }) {
+//     this.width = 5;
+//     this.height = 13;
+
+//     this.coordinates = {
+//       x: x - this.width / 2,
+//       y: y,
+//     };
+
+//     this.velocity = {
+//       x: 0,
+//       y: -13,
+//     };
+//   }
+
+//   draw() {
+//     c.shadowBlur = 13;
+//     c.shadowOffsetY = 20;
+//     c.shadowColor = 'white';
+//     c.fillStyle = 'white';
+//     c.fillRect(this.coordinates.x, this.coordinates.y, this.width, this.height);
+//     // clearing the shadow
+//     c.shadowColor = 'transparent';
+//     c.shadowBlur = 0;
+//   }
+
+//   update() {
+//     this.draw();
+//     this.coordinates.x += this.velocity.x;
+//     this.coordinates.y += this.velocity.y;
+//   }
+// }
+// const alienProjectiles = [];
+
 // --------------------------------------
 // ------ALIEN------
 class Alien {
@@ -269,10 +307,10 @@ function animate() {
       // collision detection
       projectiles.forEach((projectile, pi) => {
         if (
-          projectile.coordinates.y <= member.coordinates.y + member.height &&
-          projectile.coordinates.y >= member.coordinates.y &&
-          projectile.coordinates.x >= member.coordinates.x &&
-          projectile.coordinates.x <= member.coordinates.x + member.width
+          projectile.coordinates.y <= member.coordinates?.y + member.height &&
+          projectile.coordinates.y >= member.coordinates?.y &&
+          projectile.coordinates.x >= member.coordinates?.x &&
+          projectile.coordinates.x <= member.coordinates?.x + member.width
         ) {
           setTimeout(() => {
             // ?? what does it mean 'splicing changes the whole array so we need to make sure the items we wanna remove are actually there in the first place' ??
@@ -284,6 +322,13 @@ function animate() {
               projectiles.splice(pi, 1);
               group.members.splice(mi, 1);
 
+              // create a new group of aliens every time the number of alive ones is less than 8
+              const allAliens = groups.reduce((a, group) => {
+                return a + group.members.length;
+              }, 0);
+              if (allAliens < 8) {
+                groups.push(new Group());
+              }
               // whatever we do, the first alien in the array is located in the far left and the last one in the array is in the right
               // if we have anything!
               if (group.members.length > 0) {
