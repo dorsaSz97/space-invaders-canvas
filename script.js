@@ -316,6 +316,19 @@ function animate() {
     } else {
       alienProjectile.update();
     }
+
+    if (
+      alienProjectile.coordinates.y - alienProjectile.radius >=
+        spaceship.coordinates?.y &&
+      alienProjectile.coordinates.x - alienProjectile.radius >=
+        spaceship.coordinates?.x &&
+      alienProjectile.coordinates.x + alienProjectile.radius <=
+        spaceship.coordinates?.x + spaceship.width
+    ) {
+      // remove both projectile and player
+      alienProjectiles.splice(i, 1);
+      console.log('you lose');
+    }
   });
 
   groups.forEach((group, gi) => {
@@ -373,7 +386,7 @@ function animate() {
     });
   });
 
-  if (controlKeys.a.pressed && spaceship.coordinates.x >= 0) {
+  if (controlKeys.a.pressed && spaceship.coordinates?.x >= 0) {
     spaceship.velocity.x = -5;
     spaceship.tilt = -0.2;
   } else if (
