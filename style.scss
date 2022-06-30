@@ -1,2 +1,24 @@
 @use 'abstracts' as *;
 @use 'base/base';
+
+.gameover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  &.hide {
+    display: none;
+  }
+
+  .btn--retry {
+    color: white;
+    border: 1px solid white;
+    padding: 30px 45px;
+    font-size: 29px;
+  }
+}

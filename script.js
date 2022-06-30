@@ -76,7 +76,48 @@ class Spaceship {
     }
   }
 }
-const spaceship = new Spaceship();
+let spaceship = new Spaceship();
+
+// --------------------------------------
+// ------ALIEN PROJECTILE------
+class Particle {
+  constructor(x, y, dx, dy, r, color) {
+    // we need to know from which alien we want to shoot
+    this.coordinates = {
+      x: x,
+      y: y,
+    };
+
+    this.velocity = {
+      x: dx,
+      y: dy,
+    };
+
+    this.radius = r;
+    this.color = color;
+    this.opacity = 1;
+  }
+
+  draw() {
+    c.save();
+    // this is a globa property and would affect everything and we want it to only affect the code between save and restore and fade the particles
+    c.globalAlpha = this.opacity;
+    c.beginPath();
+    c.arc(this.coordinates.x, this.coordinates.y, this.radius, 0, Math.PI * 2);
+    c.fillStyle = this.color;
+    c.fill();
+    c.closePath();
+    c.restore();
+  }
+
+  update() {
+    this.draw();
+    this.coordinates.x += this.velocity.x;
+    this.coordinates.y += this.velocity.y;
+    this.opacity -= 0.01;
+  }
+}
+let particles = [];
 
 // --------------------------------------
 // ------PROJECTILE------
@@ -114,7 +155,7 @@ class Projectile {
     this.coordinates.y += this.velocity.y;
   }
 }
-const projectiles = [];
+let projectiles = [];
 
 function createProjectiles() {
   if (controlKeys.space.pressed) {
@@ -159,7 +200,7 @@ class AlienProjectile {
     this.coordinates.y += this.velocity.y;
   }
 }
-const alienProjectiles = [];
+let alienProjectiles = [];
 
 // --------------------------------------
 // ------ALIEN------
@@ -265,7 +306,7 @@ class Group {
   }
 }
 // multiple groups coming and going
-const groups = [new Group()];
+let groups = [new Group()];
 
 // --------------------------------------
 // creating this to check if we wanted to add to the position or not
@@ -281,19 +322,45 @@ const controlKeys = {
   },
 };
 
+function createParticles(obj, color) {
+  // this amount of particles
+  for (let i = 1; i < 20; i++) {
+    particles.push(
+      new Particle(
+        obj.coordinates?.x + obj.width / 2,
+        obj.coordinates?.y + obj.height / 2,
+        (Math.random() - 0.5) * 2.3,
+        (Math.random() - 0.5) * 2.3,
+        (Math.random() * obj.width) / 30,
+        color
+      )
+    );
+  }
+}
 // --------------------------------------
 // ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 let framesNumb = 0;
 function animate() {
-  requestAnimationFrame(animate);
+  let animationFrameId = requestAnimationFrame(animate);
 
   // the default is black but we need to specify it again in the fillstyle because there could be another fillstyle before this and we dont want the bg to be of that color instead of black
   // we want to call this here and not at the beginning because the canvas needs to be cleared before each repaint
   c.fillStyle = 'black';
   c.fillRect(0, 0, canvas.width, canvas.height);
 
+  // just rendering
   spaceship.update();
+  particles.forEach((particle, i) => {
+    if (particle.opacity <= 0) {
+      // stop the flickering
+      setTimeout(() => {
+        particles.splice(i, 1);
+      }, 0);
+    } else {
+      particle.update();
+    }
+  });
   projectiles.forEach((projectile, i) => {
     // garbage collection for the performance
     if (projectile.coordinates.y + projectile.width < 0) {
@@ -325,12 +392,19 @@ function animate() {
       alienProjectile.coordinates.x + alienProjectile.radius <=
         spaceship.coordinates?.x + spaceship.width
     ) {
+      createParticles(spaceship, 'blue');
       // remove both projectile and player
       alienProjectiles.splice(i, 1);
       console.log('you lose');
+      setTimeout(() => {
+        cancelAnimationFrame(animationFrameId);
+
+        setTimeout(() => {
+          document.querySelector('.gameover').classList.remove('hide');
+        }, 1000);
+      }, 2000);
     }
   });
-
   groups.forEach((group, gi) => {
     group.update();
     // if there are any aliens in the current group fire random projectiles from an alien after certain amount of frames
@@ -358,6 +432,8 @@ function animate() {
               // remove both projectile and alien from the array
               projectiles.splice(pi, 1);
               group.members.splice(mi, 1);
+
+              createParticles(member, '#e07f87');
 
               // create a new group of aliens every time the number of alive ones is less than 8
               const allAliens = groups.reduce((a, group) => {
@@ -437,4 +513,15 @@ addEventListener('keyup', e => {
     default:
       break;
   }
+});
+
+document.querySelector('.btn--retry').addEventListener('click', () => {
+  document.querySelector('.gameover').classList.add('hide');
+  spaceship = new Spaceship();
+  projectiles = [];
+  particles = [];
+  alienProjectiles = [];
+  groups = [new Group()];
+  framesNumb = 0;
+  animate();
 });
