@@ -16,6 +16,7 @@ class Spaceship {
 
     this.tilt = 0;
 
+    this.opacity = 1;
     // image for the visuals of the spaceship
     // drawImage() needs an image element with its src set
     const image = new Image();
@@ -43,6 +44,7 @@ class Spaceship {
 
     // taking a snapshot of the current state of the canvas
     c.save();
+    c.globalAlpha = this.opacity;
     // first we have to move the top left of our canvas to the middle of our spaceship
     c.translate(
       spaceship.coordinates.x + spaceship.width / 2,
@@ -81,7 +83,7 @@ let spaceship = new Spaceship();
 // --------------------------------------
 // ------ALIEN PROJECTILE------
 class Particle {
-  constructor(x, y, dx, dy, r, color) {
+  constructor(x, y, dx, dy, r, color, willFade) {
     // we need to know from which alien we want to shoot
     this.coordinates = {
       x: x,
@@ -96,6 +98,7 @@ class Particle {
     this.radius = r;
     this.color = color;
     this.opacity = 1;
+    this.willFade = willFade;
   }
 
   draw() {
@@ -114,7 +117,9 @@ class Particle {
     this.draw();
     this.coordinates.x += this.velocity.x;
     this.coordinates.y += this.velocity.y;
-    this.opacity -= 0.01;
+    if (this.willFade) {
+      this.opacity -= 0.01;
+    }
   }
 }
 let particles = [];
@@ -183,7 +188,7 @@ class AlienProjectile {
       y: dy,
     };
 
-    this.radius = 4;
+    this.radius = 6;
   }
 
   draw() {
@@ -267,7 +272,7 @@ class Group {
       y: 0,
     };
     this.velocity = {
-      x: 5,
+      x: 3,
       y: 0,
     };
 
@@ -299,7 +304,7 @@ class Group {
       this.coordinates.x <= 0
     ) {
       this.velocity.x = -this.velocity.x;
-      this.velocity.y = 64 / 1.4 / 2.5;
+      this.velocity.y = 64 / 2;
     } else {
       this.velocity.y = 0;
     }
@@ -332,17 +337,38 @@ function createParticles(obj, color) {
         (Math.random() - 0.5) * 2.3,
         (Math.random() - 0.5) * 2.3,
         (Math.random() * obj.width) / 30,
-        color
+        color,
+        true
       )
     );
   }
 }
+
+// --------------------------------------
+// ------Moving bg
+for (let i = 1; i < 80; i++) {
+  particles.push(
+    new Particle(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      0,
+      0.5,
+      Math.random() * 1,
+      'white',
+      false
+    )
+  );
+}
+
 // --------------------------------------
 // ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 let framesNumb = 0;
+let gameover = false;
+let gamepause = false;
 function animate() {
-  let animationFrameId = requestAnimationFrame(animate);
+  if (gameover) return;
+  requestAnimationFrame(animate);
 
   // the default is black but we need to specify it again in the fillstyle because there could be another fillstyle before this and we dont want the bg to be of that color instead of black
   // we want to call this here and not at the beginning because the canvas needs to be cleared before each repaint
@@ -352,6 +378,11 @@ function animate() {
   // just rendering
   spaceship.update();
   particles.forEach((particle, i) => {
+    // repositioning particles to the top where we cant see them but anywhere along the x axis
+    if (particle.coordinates.y - particle.radius >= canvas.height) {
+      particle.coordinates.x = Math.random() * canvas.width;
+      particle.coordinates.y = -particle.radius;
+    }
     if (particle.opacity <= 0) {
       // stop the flickering
       setTimeout(() => {
@@ -392,16 +423,18 @@ function animate() {
       alienProjectile.coordinates.x + alienProjectile.radius <=
         spaceship.coordinates?.x + spaceship.width
     ) {
-      createParticles(spaceship, 'blue');
-      // remove both projectile and player
-      alienProjectiles.splice(i, 1);
-      console.log('you lose');
       setTimeout(() => {
-        cancelAnimationFrame(animationFrameId);
+        alienProjectiles.splice(i, 1);
+        spaceship.opacity = 0;
+        gamepause = true;
+      }, 0);
 
-        setTimeout(() => {
-          document.querySelector('.gameover').classList.remove('hide');
-        }, 1000);
+      createParticles(spaceship, '#326462');
+      // remove both projectile and player
+
+      setTimeout(() => {
+        gameover = true;
+        document.querySelector('.gameover').classList.remove('hide');
       }, 2000);
     }
   });
@@ -483,6 +516,8 @@ animate();
 // ------EventListeners
 // spaceship's movement W/keyboard
 addEventListener('keydown', e => {
+  // otherwise spaceship could still shoot after getting hit
+  if (gamepause) return;
   e.preventDefault();
   switch (e.key) {
     case 'a':
@@ -523,5 +558,20 @@ document.querySelector('.btn--retry').addEventListener('click', () => {
   alienProjectiles = [];
   groups = [new Group()];
   framesNumb = 0;
+  gameover = false;
+  gamepause = false;
+  for (let i = 1; i < 80; i++) {
+    particles.push(
+      new Particle(
+        Math.random() * canvas.width,
+        Math.random() * canvas.height,
+        0,
+        0.5,
+        Math.random() * 1,
+        'white',
+        false
+      )
+    );
+  }
   animate();
 });
