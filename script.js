@@ -4,6 +4,7 @@ const c = canvas.getContext('2d');
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
+// --------------------------------------
 // ------PLAYER------
 class Spaceship {
   constructor() {
@@ -110,6 +111,7 @@ class Projectile {
   }
 }
 const projectiles = [];
+
 function createProjectiles() {
   if (controlKeys.space.pressed) {
     projectiles.push(
@@ -120,8 +122,54 @@ function createProjectiles() {
     );
   }
 }
-// --------------------------------------
 
+// --------------------------------------
+// ------ALIEN------
+class Alien {
+  constructor() {
+    this.velocity = {
+      x: 0,
+      y: 0,
+    };
+
+    const image = new Image();
+    image.src = './img/alien.png';
+
+    image.addEventListener('load', () => {
+      this.image = image;
+      const scale = 1.2;
+
+      this.width = image.width / scale;
+      this.height = image.height / scale;
+
+      this.coordinates = {
+        x: canvas.width / 2 - this.width / 2,
+        y: canvas.height / 2 - this.height / 2,
+      };
+    });
+  }
+
+  draw() {
+    c.drawImage(
+      this.image,
+      this.coordinates.x,
+      this.coordinates.y,
+      this.width,
+      this.height
+    );
+  }
+
+  update() {
+    if (this.image) {
+      this.draw();
+      this.coordinates.x += this.velocity.x;
+      this.coordinates.y += this.velocity.y;
+    }
+  }
+}
+const alien = new Alien();
+
+// --------------------------------------
 // creating this to check if we wanted to add to the position or not
 const controlKeys = {
   a: {
@@ -136,6 +184,7 @@ const controlKeys = {
 };
 
 // --------------------------------------
+// ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 function animate() {
   requestAnimationFrame(animate);
@@ -157,6 +206,7 @@ function animate() {
       projectile.update();
     }
   });
+  alien.update();
 
   if (controlKeys.a.pressed && spaceship.coordinates.x >= 0) {
     spaceship.velocity.x = -5;
@@ -175,6 +225,7 @@ function animate() {
 animate();
 
 // --------------------------------------
+// ------EventListeners
 // spaceship's movement W/keyboard
 addEventListener('keydown', e => {
   e.preventDefault();
