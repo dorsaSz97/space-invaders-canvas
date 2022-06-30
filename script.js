@@ -83,7 +83,7 @@ const spaceship = new Spaceship();
 class Projectile {
   // anything dynamic should be passed as a parameter
   constructor({ x, y }) {
-    this.width = 5;
+    this.width = 4;
     this.height = 13;
 
     this.coordinates = {
@@ -127,43 +127,39 @@ function createProjectiles() {
   }
 }
 
-// // --------------------------------------
-// // ------PROJECTILE------
-// class AlienProjectile {
-//   // anything dynamic should be passed as a parameter
-//   constructor({ x, y }) {
-//     this.width = 5;
-//     this.height = 13;
+// --------------------------------------
+// ------ALIEN PROJECTILE------
+class AlienProjectile {
+  constructor(x, y, dx, dy) {
+    // we need to know from which alien we want to shoot
+    this.coordinates = {
+      x: x,
+      y: y,
+    };
 
-//     this.coordinates = {
-//       x: x - this.width / 2,
-//       y: y,
-//     };
+    this.velocity = {
+      x: dx,
+      y: dy,
+    };
 
-//     this.velocity = {
-//       x: 0,
-//       y: -13,
-//     };
-//   }
+    this.radius = 4;
+  }
 
-//   draw() {
-//     c.shadowBlur = 13;
-//     c.shadowOffsetY = 20;
-//     c.shadowColor = 'white';
-//     c.fillStyle = 'white';
-//     c.fillRect(this.coordinates.x, this.coordinates.y, this.width, this.height);
-//     // clearing the shadow
-//     c.shadowColor = 'transparent';
-//     c.shadowBlur = 0;
-//   }
+  draw() {
+    c.beginPath();
+    c.arc(this.coordinates.x, this.coordinates.y, this.radius, 0, Math.PI * 2);
+    c.fillStyle = '#E07F87';
+    c.fill();
+    c.closePath();
+  }
 
-//   update() {
-//     this.draw();
-//     this.coordinates.x += this.velocity.x;
-//     this.coordinates.y += this.velocity.y;
-//   }
-// }
-// const alienProjectiles = [];
+  update() {
+    this.draw();
+    this.coordinates.x += this.velocity.x;
+    this.coordinates.y += this.velocity.y;
+  }
+}
+const alienProjectiles = [];
 
 // --------------------------------------
 // ------ALIEN------
@@ -207,6 +203,17 @@ class Alien {
       this.coordinates.x += dx;
       this.coordinates.y += dy;
     }
+  }
+
+  fire(alienProjectiles) {
+    alienProjectiles.push(
+      new AlienProjectile(
+        this.coordinates?.x + this.width / 2,
+        this.coordinates?.y + this.height,
+        0,
+        4
+      )
+    );
   }
 }
 
@@ -278,7 +285,6 @@ const controlKeys = {
 // ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 let framesNumb = 0;
-let randomFraction = Math.floor(Math.random() * 630 + 630);
 function animate() {
   requestAnimationFrame(animate);
 
@@ -299,8 +305,26 @@ function animate() {
       projectile.update();
     }
   });
+  alienProjectiles.forEach((alienProjectile, i) => {
+    if (
+      alienProjectile.coordinates.y + alienProjectile.radius >
+      canvas.height
+    ) {
+      setTimeout(() => {
+        alienProjectiles.splice(i, 1);
+      }, 0);
+    } else {
+      alienProjectile.update();
+    }
+  });
+
   groups.forEach((group, gi) => {
     group.update();
+    // if there are any aliens in the current group fire random projectiles from an alien after certain amount of frames
+    if (framesNumb % 150 === 0 && group.members.length > 0) {
+      const randomFraction = Math.floor(Math.random() * group.members.length);
+      group.members[randomFraction].fire(alienProjectiles);
+    }
     group.members.forEach((member, mi) => {
       member.update(group.velocity.x, group.velocity.y);
 
@@ -362,21 +386,7 @@ function animate() {
     spaceship.velocity.x = 0;
     spaceship.tilt = 0;
   }
-
-  // if (groups.length < 3) {
-  //   groups.push(new Group());
-  // }
-  //       // creating a new group of aliens after a number of frames has been painted and the previoud group is somewhat in the middle
-  // framesNumb++;
-  // if (
-  //   framesNumb % randomFraction === 0 ||
-  //   groups[groups.length - 1].members.length <= 5
-  // ) {
-  //   // ?? stop creating a lot unwanted of groups
-  //   // framesNumb =0;
-  //   randomFraction = Math.floor(Math.random() * 630 + 630);
-  //   groups.push(new Group());
-  // }
+  framesNumb++;
 }
 animate();
 
