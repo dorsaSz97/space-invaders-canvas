@@ -4,6 +4,12 @@ const c = canvas.getContext('2d');
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
+addEventListener('resize', () => {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  animate();
+});
+
 // --------------------------------------
 // ------PLAYER------
 class Spaceship {
@@ -304,7 +310,7 @@ class Group {
       this.coordinates.x <= 0
     ) {
       this.velocity.x = -this.velocity.x;
-      this.velocity.y = 64 / 2;
+      this.velocity.y = 80;
     } else {
       this.velocity.y = 0;
     }
@@ -364,12 +370,25 @@ for (let i = 1; i < 80; i++) {
 // ------requestAnimationFrame()
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 let framesNumb = 0;
+let score = 0;
 let gameover = false;
 let gamepause = false;
 function animate() {
   if (gameover) return;
   requestAnimationFrame(animate);
-
+  // if (framesNumb % 500 === 0) {
+  //   particles.push(
+  //     new Particle(
+  //       Math.random() * canvas.width,
+  //       (Math.random() * canvas.height) / 2,
+  //       0,
+  //       0.5,
+  //       10,
+  //       'blue',
+  //       false
+  //     )
+  //   );
+  // }
   // the default is black but we need to specify it again in the fillstyle because there could be another fillstyle before this and we dont want the bg to be of that color instead of black
   // we want to call this here and not at the beginning because the canvas needs to be cleared before each repaint
   c.fillStyle = 'black';
@@ -435,7 +454,7 @@ function animate() {
       setTimeout(() => {
         gameover = true;
         document.querySelector('.gameover').classList.remove('hide');
-      }, 2000);
+      }, 1000);
     }
   });
   groups.forEach((group, gi) => {
@@ -447,6 +466,22 @@ function animate() {
     }
     group.members.forEach((member, mi) => {
       member.update(group.velocity.x, group.velocity.y);
+
+      if (
+        member.coordinates?.y + member.height >=
+        spaceship.coordinates?.y - 10
+      ) {
+        createParticles(spaceship, '#326462');
+
+        setTimeout(() => {
+          gamepause = true;
+        }, 0);
+
+        setTimeout(() => {
+          gameover = true;
+          document.querySelector('.gameover').classList.remove('hide');
+        }, 1000);
+      }
 
       // collision detection
       projectiles.forEach((projectile, pi) => {
@@ -465,6 +500,8 @@ function animate() {
               // remove both projectile and alien from the array
               projectiles.splice(pi, 1);
               group.members.splice(mi, 1);
+              score += 100;
+              document.querySelector('.score .number').innerHTML = score;
 
               createParticles(member, '#e07f87');
 
@@ -519,11 +556,14 @@ addEventListener('keydown', e => {
   // otherwise spaceship could still shoot after getting hit
   if (gamepause) return;
   e.preventDefault();
+  console.log(e.key);
   switch (e.key) {
     case 'a':
+    case 'ArrowLeft':
       controlKeys.a.pressed = true;
       break;
     case 'd':
+    case 'ArrowRight':
       controlKeys.d.pressed = true;
       break;
     case ' ':
@@ -553,6 +593,8 @@ addEventListener('keyup', e => {
 document.querySelector('.btn--retry').addEventListener('click', () => {
   document.querySelector('.gameover').classList.add('hide');
   spaceship = new Spaceship();
+  score = 0;
+  document.querySelector('.score .number').innerHTML = score;
   projectiles = [];
   particles = [];
   alienProjectiles = [];

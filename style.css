@@ -101,4 +101,12 @@ input {
   border: 1px solid white;
   padding: 30px 45px;
   font-size: 29px;
+}
+
+.score {
+  position: absolute;
+  color: white;
+  top: 10px;
+  left: 10px;
+  font-size: 17px;
 }/*# sourceMappingURL=style.css.map */
