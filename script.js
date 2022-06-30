@@ -181,7 +181,7 @@ class Group {
       y: 0,
     };
     this.velocity = {
-      x: 8,
+      x: 5,
       y: 0,
     };
 
@@ -263,8 +263,30 @@ function animate() {
   });
   groups.forEach(group => {
     group.update();
-    group.members.forEach(member => {
+    group.members.forEach((member, mi) => {
       member.update(group.velocity.x, group.velocity.y);
+
+      projectiles.forEach((projectile, pi) => {
+        if (
+          projectile.coordinates.y <= member.coordinates.y + member.height &&
+          projectile.coordinates.y >= member.coordinates.y &&
+          projectile.coordinates.x >= member.coordinates.x &&
+          projectile.coordinates.x <= member.coordinates.x + member.width
+        ) {
+          setTimeout(() => {
+            // ?? what does it mean 'splicing changes the whole array so we need to make sure the items we wanna remove are actually there in the first place' ??
+            // if (
+            //   group.members.find(m => m === member) &&
+            //   projectiles.find(p => p === projectile)
+            // ) {
+            //   projectiles.splice(pi, 1);
+            //   group.members.splice(mi, 1);
+            // }
+            projectiles.splice(pi, 1);
+            group.members.splice(mi, 1);
+          }, 0);
+        }
+      });
     });
   });
 
@@ -282,16 +304,20 @@ function animate() {
     spaceship.tilt = 0;
   }
 
-  // creating a new group of aliens after a number of frames has been painted and the previoud group is somewhat in the middle
-  framesNumb++;
-  groups.forEach(group => {
-    if (framesNumb % randomFraction === 0) {
-      // ?? stop creating a lot unwanted of groups
-      // framesNumb =0;
-      randomFraction = Math.floor(Math.random() * 630 + 630);
-      groups.push(new Group());
-    }
-  });
+  // if (groups.length < 3) {
+  //   groups.push(new Group());
+  // }
+  //       // creating a new group of aliens after a number of frames has been painted and the previoud group is somewhat in the middle
+  // framesNumb++;
+  // if (
+  //   framesNumb % randomFraction === 0 ||
+  //   groups[groups.length - 1].members.length <= 5
+  // ) {
+  //   // ?? stop creating a lot unwanted of groups
+  //   // framesNumb =0;
+  //   randomFraction = Math.floor(Math.random() * 630 + 630);
+  //   groups.push(new Group());
+  // }
 }
 animate();
 
