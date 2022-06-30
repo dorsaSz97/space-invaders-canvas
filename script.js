@@ -76,6 +76,52 @@ class Spaceship {
   }
 }
 const spaceship = new Spaceship();
+
+// --------------------------------------
+// ------PROJECTILE------
+class Projectile {
+  // anything dynamic should be passed as a parameter
+  constructor({ x, y }) {
+    this.width = 2;
+    this.height = 13;
+
+    this.coordinates = {
+      x: x,
+      y: y,
+    };
+
+    this.velocity = {
+      x: 0,
+      y: -13,
+    };
+
+    this.radius = 3;
+  }
+
+  draw() {
+    c.fillStyle = 'white';
+    c.fillRect(this.coordinates.x, this.coordinates.y, this.width, this.height);
+  }
+
+  update() {
+    this.draw();
+    this.coordinates.x += this.velocity.x;
+    this.coordinates.y += this.velocity.y;
+  }
+}
+const projectiles = [];
+function createProjectiles() {
+  if (controlKeys.space.pressed) {
+    projectiles.push(
+      new Projectile({
+        x: spaceship.coordinates.x + spaceship.width / 2,
+        y: spaceship.coordinates.y,
+      })
+    );
+  }
+}
+// --------------------------------------
+
 // creating this to check if we wanted to add to the position or not
 const controlKeys = {
   a: {
@@ -89,6 +135,7 @@ const controlKeys = {
   },
 };
 
+// --------------------------------------
 // the process of loading an image takes time and it may not even be loaded when we are trying to draw it so we need to do it in an animation loop to keep painting the frames until it finally IS
 function animate() {
   requestAnimationFrame(animate);
@@ -97,7 +144,19 @@ function animate() {
   // we want to call this here and not at the beginning because the canvas needs to be cleared before each repaint
   c.fillStyle = 'black';
   c.fillRect(0, 0, canvas.width, canvas.height);
+
   spaceship.update();
+  projectiles.forEach((projectile, i) => {
+    // garbage collection for the performance
+    if (projectile.coordinates.y + projectile.width < 0) {
+      // to avoid flashing, we dont want this to happen immediately but after one frame has passed
+      setTimeout(() => {
+        projectiles.splice(i, 1);
+      }, 0);
+    } else {
+      projectile.update();
+    }
+  });
 
   if (controlKeys.a.pressed && spaceship.coordinates.x >= 0) {
     spaceship.velocity.x = -5;
@@ -115,6 +174,7 @@ function animate() {
 }
 animate();
 
+// --------------------------------------
 // spaceship's movement W/keyboard
 addEventListener('keydown', e => {
   e.preventDefault();
@@ -126,11 +186,13 @@ addEventListener('keydown', e => {
       controlKeys.d.pressed = true;
       break;
     case ' ':
+      console.log(e);
       controlKeys.space.pressed = true;
       break;
     default:
       break;
   }
+  createProjectiles();
 });
 addEventListener('keyup', e => {
   switch (e.key) {
