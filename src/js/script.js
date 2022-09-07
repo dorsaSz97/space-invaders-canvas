@@ -26,7 +26,7 @@ class Spaceship {
     // image for the visuals of the spaceship
     // drawImage() needs an image element with its src set
     const image = new Image();
-    image.src = './img/spaceship.png';
+    image.src = 'assets/img/spaceship.png';
 
     // loading images take time so get its properties after its loaded
     image.addEventListener('load', () => {
@@ -223,7 +223,7 @@ class Alien {
     };
 
     const image = new Image();
-    image.src = './img/alien.png';
+    image.src = 'assets/img/alien.png';
 
     image.addEventListener('load', () => {
       this.image = image;
